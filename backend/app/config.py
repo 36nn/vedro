@@ -6,6 +6,7 @@
 
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Каталог backend/
@@ -22,11 +23,26 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = 8000
 
-    # Разрешённые источники запросов (frontend на Vite)
+    # Разрешённые источники запросов (CORS). По умолчанию — локальный Vite.
+    # На Render задаётся env FRONTEND_ORIGINS через запятую:
+    #   FRONTEND_ORIGINS=https://vedro-frontend.onrender.com
     frontend_origins: list[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ]
+
+    # Автоматически применять миграции Alembic при старте. Нужно на Render:
+    # на бесплатном тарифе нет доступа к шеллу для `alembic upgrade`.
+    # Отключается через env AUTO_MIGRATE=false.
+    auto_migrate: bool = True
+
+    @field_validator("frontend_origins", mode="before")
+    @classmethod
+    def _split_frontend_origins(cls, value):
+        """Позволить FRONTEND_ORIGINS в виде строки через запятую."""
+        if isinstance(value, str):
+            return [s.strip() for s in value.split(",") if s.strip()]
+        return value
 
     # Ключ YouTube Data API v3. Хранится только на backend (в .env)
     # и никогда не попадает во frontend.

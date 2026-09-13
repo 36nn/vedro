@@ -118,6 +118,31 @@ Credentials → API key. Ключи Resend: https://resend.com/api-keys.
 `EMAIL_DEV_MODE=true` — ссылка подтверждения будет показываться прямо на сайте.
 **В production обязательно `false`.**
 
+## Деплой на Render (бесплатно)
+
+В корне репозитория есть `render.yaml` (Blueprint): backend (FastAPI) +
+frontend (Vite static site). Только бесплатные тарифы.
+
+1. Render Dashboard → **New → Blueprint** → выбери репозиторий `36nn/vedro`.
+2. Render спросит значения переменных, помеченных `sync: false`:
+   - `DATABASE_URL` — внешний PostgreSQL (например Supabase);
+   - `YOUTUBE_API_KEY`, `RESEND_API_KEY` — твои ключи из локального `.env`;
+   - `APP_BASE_URL` — URL фронтенда (например `https://vedro-frontend.onrender.com`);
+   - `FRONTEND_ORIGINS` — тот же URL фронтенда (CORS);
+   - `VITE_API_BASE_URL` — URL бэкенда (например `https://vedro-backend.onrender.com`).
+   `JWT_SECRET_KEY` сгенерируется автоматически.
+3. После первого деплоя: frontend-сервис → **Manual Deploy → Clear build cache
+   and deploy**, чтобы `VITE_API_BASE_URL` гарантированно попал в сборку.
+4. Проверка backend: `https://vedro-backend.onrender.com/api/health`
+5. Free-тариф: backend «засыпает» после 15 минут бездействия — первый запрос
+   просыпается 30–60 секунд. Миграции применяются сами при каждом старте.
+
+**Supabase (бесплатный PostgreSQL):** создай проект → Connect → Connection
+string → Session pooler. В строке `postgresql://...` замени схему на
+`postgresql+psycopg://...` и добавь `?sslmode=require` — это и есть
+`DATABASE_URL`. Supabase также требует выполнить SQL-миграции их способом ИЛИ
+полагаться на авто-миграции backend при старте (AUTO_MIGRATE=true).
+
 ## Заметки о квоте YouTube
 
 Поиск (`search.list`) стоит 100 единиц квоты, результаты кэшируются в памяти

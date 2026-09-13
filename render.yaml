@@ -1,0 +1,53 @@
+# Render Blueprint: backend (FastAPI) + frontend (Vite static).
+# Только бесплатные тарифы. Секреты (sync: false) заполняются в Render Dashboard.
+# Deploy: Render Dashboard → New → Blueprint → выбрать репозиторий 36nn/vedro.
+
+services:
+  # ---------- Backend: FastAPI + Uvicorn ----------
+  - type: web
+    name: vedro-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false        # внешний PostgreSQL (например Supabase Session pooler)
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: Vedro <onboarding@resend.dev>
+      - key: APP_BASE_URL
+        sync: false        # URL фронтенда на Render
+      - key: FRONTEND_ORIGINS
+        sync: false        # URL фронтенда (CORS)
+      - key: EMAIL_DEV_MODE
+        value: "false"
+      - key: AUTO_MIGRATE
+        value: "true"
+
+  # ---------- Frontend: Vite static site ----------
+  - type: web
+    name: vedro-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      # SPA: все пути (/login, /history, ...) отдаются index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false        # URL backend-сервиса на Render
