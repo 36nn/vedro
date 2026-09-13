@@ -1,0 +1,12 @@
+# Зависимости backend
+fastapi
+uvicorn
+httpx
+pydantic-settings
+email-validator
+sqlalchemy
+alembic
+psycopg[binary]
+argon2-cffi
+pyjwt
+resend

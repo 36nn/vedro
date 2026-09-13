@@ -1,0 +1,29 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# --- Локальные секреты (настоящие ключи только в backend/.env) ---
+.env
+.env.*
+!.env.example
+*.log
+
+# --- Node ---
+node_modules/
+dist/
+build/
+*.local
+
+# --- IDE / система ---
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Локальные видео (папка сохраняется через .gitkeep) ---
+backend/videos/*
+!backend/videos/.gitkeep
