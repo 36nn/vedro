@@ -30,7 +30,6 @@ class UserOut(BaseModel):
     id: int
     username: str
     email: str
-    email_verified: bool
     created_at: datetime
 
 
@@ -46,35 +45,6 @@ class Token(BaseModel):
 
     access_token: str
     token_type: str = "bearer"
-
-
-class RegisterResponse(BaseModel):
-    """Ответ на успешную регистрацию.
-
-    Токен подтверждения НЕ возвращается. Единственное исключение —
-    dev-режим (EMAIL_DEV_MODE=true): тогда в verification_url лежит
-    ссылка для локального тестирования.
-    """
-
-    message: str
-    email: str
-    verification_url: str | None = None
-
-
-class ResendRequest(BaseModel):
-    """Запрос повторной отправки письма подтверждения."""
-
-    email: EmailStr
-
-
-class ResendResponse(BaseModel):
-    """Ответ на повторную отправку письма.
-
-    verification_url заполняется только в dev-режиме (см. RegisterResponse).
-    """
-
-    message: str
-    verification_url: str | None = None
 
 
 class HistoryCreate(BaseModel):

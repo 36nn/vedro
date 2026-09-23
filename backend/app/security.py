@@ -5,8 +5,6 @@
 - Никакие пароли и токены не логируются.
 """
 
-import hashlib
-import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
@@ -99,15 +97,3 @@ def get_current_user(
 # Удобные аннотации для защищённых endpoints
 CurrentUser = Annotated[User, Depends(get_current_user)]
 DBSession = Annotated[Session, Depends(get_db)]
-
-
-# --- Токены подтверждения email ---
-
-def generate_verification_token() -> str:
-    """Криптографически стойкий одноразовый токен (идёт пользователю в письме)."""
-    return secrets.token_urlsafe(32)
-
-
-def hash_token(token: str) -> str:
-    """SHA-256 токена: в БД храним ТОЛЬКО хеш, никогда не сам токен."""
-    return hashlib.sha256(token.encode("utf-8")).hexdigest()

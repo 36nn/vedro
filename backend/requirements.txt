@@ -9,4 +9,3 @@ alembic
 psycopg[binary]
 argon2-cffi
 pyjwt
-resend

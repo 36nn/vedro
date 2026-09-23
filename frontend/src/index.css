@@ -1086,53 +1086,6 @@ body {
   }
 }
 
-/* --- Подтверждение email --- */
-
-.register-note {
-  font-size: 14.5px;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.7);
-  text-align: center;
-}
-
-.register-note__email {
-  color: #ff9a2e;
-  overflow-wrap: anywhere;
-}
-
-.register-note--ok {
-  color: #4ade80;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: rgba(74, 222, 128, 0.08);
-  border: 1px solid rgba(74, 222, 128, 0.25);
-}
-
-.verify-block {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 14px;
-  background: rgba(255, 154, 46, 0.07);
-  border: 1px solid rgba(255, 154, 46, 0.3);
-}
-
-/* Ссылка-кнопка «Войти» на странице подтверждения */
-.auth-card__link-as-btn {
-  text-decoration: none;
-  text-align: center;
-}
-
-/* Статус email в профиле */
-.profile-verified {
-  color: #4ade80;
-}
-
-.profile-unverified {
-  color: #fbbf24;
-}
-
 /* --- Удаление аккаунта (опасная зона) --- */
 
 .btn--danger {

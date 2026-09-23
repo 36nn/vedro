@@ -1,18 +1,17 @@
 /**
- * Регистрация: 4 поля, проверки на клиенте (backend валидирует повторно).
- * После успеха — экран «Проверьте почту»: автовход отключён, пока email
- * не подтверждён по ссылке из письма.
+ * Страница регистрации: 4 поля, проверки на клиенте (backend валидирует
+ * повторно), после успеха — автоматический вход на главную.
  */
 
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { resendVerification } from "../services/api";
 
 const MIN_PASSWORD_LENGTH = 6;
 
 function Register() {
   const { register } = useAuth();
+  const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -20,13 +19,6 @@ function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Экран «проверьте почту» после успешной регистрации
-  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
-  const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [resendMessage, setResendMessage] = useState<string | null>(null);
-  // Ссылка подтверждения — приходит только в dev-режиме (письма не шлются)
-  const [devUrl, setDevUrl] = useState<string | null>(null);
 
   function validate(): string | null {
     if (!username.trim() || !email.trim() || !password || !confirmPassword) {
@@ -60,85 +52,14 @@ function Register() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await register(username.trim(), email.trim(), password);
-      // Автовхода больше нет: показываем экран «проверьте почту»
-      setRegisteredEmail(result.email);
-      setDevUrl(result.verification_url ?? null);
+      // Регистрируем и сразу входим — подтверждение email не требуется
+      await register(username.trim(), email.trim(), password);
+      navigate("/", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Что-то пошло не так");
     } finally {
       setIsLoading(false);
     }
-  }
-
-  async function handleResend() {
-    if (!registeredEmail || resendState === "sending") return;
-    setResendState("sending");
-    setResendMessage(null);
-    try {
-      const result = await resendVerification(registeredEmail);
-      setResendState("sent");
-      setResendMessage(result.message);
-      setDevUrl(result.verification_url ?? null);
-    } catch (err) {
-      setResendState("error");
-      setResendMessage(err instanceof Error ? err.message : "Не удалось отправить письмо");
-    }
-  }
-
-  // --- Экран «проверьте почту» после успешной регистрации ---
-  if (registeredEmail) {
-    return (
-      <main className="page page--centered">
-        <section className="auth-card">
-          <h1 className="auth-card__title">Регистрация завершена!</h1>
-
-          <p className="register-note">
-            Мы отправили письмо на:
-            <br />
-            <b className="register-note__email">{registeredEmail}</b>
-          </p>
-          <p className="register-note">
-            Откройте письмо и нажмите кнопку «Подтвердить email» — после этого
-            можно войти в аккаунт.
-          </p>
-
-          {resendMessage && (
-            <p
-              className={
-                resendState === "error"
-                  ? "auth-card__error"
-                  : "register-note register-note--ok"
-              }
-            >
-              {resendMessage}
-            </p>
-          )}
-
-          {devUrl ? (
-            <a className="btn btn--primary auth-card__link-as-btn" href={devUrl}>
-              Перейти к подтверждению (dev)
-            </a>
-          ) : (
-            <button
-              type="button"
-              className="btn btn--primary"
-              onClick={() => void handleResend()}
-              disabled={resendState === "sending"}
-            >
-              {resendState === "sending" ? "Отправляем…" : "Отправить письмо повторно"}
-            </button>
-          )}
-
-          <p className="auth-card__footer">
-            Уже подтвердили email?{" "}
-            <Link to="/login" className="auth-card__link">
-              Войти
-            </Link>
-          </p>
-        </section>
-      </main>
-    );
   }
 
   return (

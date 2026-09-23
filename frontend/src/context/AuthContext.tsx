@@ -20,7 +20,6 @@ import {
   getToken,
   login as apiLogin,
   register as apiRegister,
-  RegisterResult,
 } from "../services/api";
 
 interface AuthContextValue {
@@ -29,7 +28,7 @@ interface AuthContextValue {
   /** Идёт проверка сохранённого токена при открытии сайта */
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<RegisterResult>;
+  register: (username: string, email: string, password: string) => Promise<void>;
   /** Полностью удаляет аккаунт и разлогинивает */
   deleteAccount: () => Promise<void>;
   logout: () => void;
@@ -62,10 +61,9 @@ function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const register = useCallback(async (username: string, email: string, password: string) => {
-    // Автовход отключён: пока email не подтверждён по ссылке из письма,
-    // backend не выдаёт JWT (403). Страница регистрации сама покажет экран
-    // «Проверьте почту» с кнопкой повторной отправки.
-    return await apiRegister({ username, email, password });
+    // Регистрируем и сразу входим — подтверждение email не требуется
+    const user = await apiRegister({ username, email, password });
+    setCurrentUser(user);
   }, []);
 
   const deleteAccount = useCallback(async () => {

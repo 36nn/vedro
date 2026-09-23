@@ -85,22 +85,6 @@ class Settings(BaseSettings):
     # Срок жизни access-токена в минутах (1440 = 24 часа)
     jwt_access_token_expire_minutes: int = 1440
 
-    # --- Email (Resend) ---
-    # API-ключ Resend — только в backend/.env. Пустой = письма не отправляются
-    # (dev-режим без почты, регистрация всё равно работает)
-    resend_api_key: str = ""
-    # От чьего имени отправляются письма (в dev — дефолтный отправитель Resend)
-    email_from: str = "Vedro <onboarding@resend.dev>"
-    # База адресов фронта: из неё строится ссылка подтверждения в письме
-    app_base_url: str = "http://localhost:5173"
-    # Срок действия токена подтверждения email, минут
-    email_verification_token_expire_minutes: int = 60
-
-    # DEV-режим: письма через Resend не отправляются, а ссылка подтверждения
-    # показывается прямо в API-ответе/на сайте (для локальных тестов с любыми
-    # email). В production обязательно false!
-    email_dev_mode: bool = False
-
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
         env_file_encoding="utf-8",

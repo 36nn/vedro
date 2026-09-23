@@ -1,12 +1,10 @@
 /**
- * Страница входа: email + пароль, загрузка, ошибки.
- * 403 (email не подтверждён) — отдельный блок с кнопкой повторной отправки.
+ * Страница входа: email + пароль, загрузка, обработка ошибок.
  */
 
 import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { ApiError, resendVerification } from "../services/api";
 
 function Login() {
   const { login } = useAuth();
@@ -18,19 +16,11 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 403: email не подтверждён — предлагаем отправить письмо повторно
-  const [needVerify, setNeedVerify] = useState(false);
-  const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [resendMessage, setResendMessage] = useState<string | null>(null);
-  // Ссылка подтверждения — только в dev-режиме (письма не шлются)
-  const [devLink, setDevLink] = useState<string | null>(null);
-
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (isLoading) return;
     setIsLoading(true);
     setError(null);
-    setNeedVerify(false);
 
     try {
       await login(email.trim(), password);
@@ -39,26 +29,8 @@ function Login() {
       navigate(from, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Что-то пошло не так");
-      if (err instanceof ApiError && err.status === 403) {
-        setNeedVerify(true);
-      }
     } finally {
       setIsLoading(false);
-    }
-  }
-
-  async function handleResend() {
-    if (resendState === "sending") return;
-    setResendState("sending");
-    setResendMessage(null);
-    try {
-      const result = await resendVerification(email.trim());
-      setResendState("sent");
-      setResendMessage(result.message);
-      setDevLink(result.verification_url ?? null);
-    } catch (err) {
-      setResendState("error");
-      setResendMessage(err instanceof Error ? err.message : "Не удалось отправить письмо");
     }
   }
 
@@ -94,40 +66,6 @@ function Login() {
         </label>
 
         {error && <p className="auth-card__error">{error}</p>}
-
-        {needVerify && (
-          <div className="verify-block">
-            <p className="register-note">
-              Мы отправили письмо с ссылкой подтверждения. Если вы уже нажали
-              ссылку — просто войдите ещё раз.
-            </p>
-            {devLink ? (
-              <a className="btn btn--primary auth-card__link-as-btn" href={devLink}>
-                Перейти к подтверждению (dev)
-              </a>
-            ) : (
-              <button
-                type="button"
-                className="btn btn--primary"
-                onClick={() => void handleResend()}
-                disabled={resendState === "sending"}
-              >
-                {resendState === "sending" ? "Отправляем…" : "Отправить письмо повторно"}
-              </button>
-            )}
-            {resendMessage && (
-              <p
-                className={
-                  resendState === "error"
-                    ? "auth-card__error"
-                    : "register-note register-note--ok"
-                }
-              >
-                {resendMessage}
-              </p>
-            )}
-          </div>
-        )}
 
         <button type="submit" className="btn btn--primary" disabled={isLoading}>
           {isLoading ? "Входим…" : "Войти"}

@@ -24,8 +24,6 @@ export interface AuthUser {
   id: number;
   username: string;
   email: string;
-  /** true — email подтверждён по ссылке из письма */
-  email_verified: boolean;
   created_at: string;
 }
 
@@ -131,15 +129,8 @@ export interface RegisterData {
   password: string;
 }
 
-export interface RegisterResult {
-  message: string;
-  email: string;
-  /** Ссылка подтверждения — заполнена только в dev-режиме (EMAIL_DEV_MODE=true) */
-  verification_url?: string | null;
-}
-
-/** Зарегистрировать аккаунт (вход НЕ выполняется — нужно подтвердить email). */
-export async function register(data: RegisterData): Promise<RegisterResult> {
+/** Зарегистрировать аккаунт (AuthContext сразу выполнит вход). */
+export async function register(data: RegisterData): Promise<AuthUser> {
   const response = await authFetch("/api/auth/register", {
     method: "POST",
     body: JSON.stringify(data),
@@ -147,32 +138,7 @@ export async function register(data: RegisterData): Promise<RegisterResult> {
   if (!response.ok) {
     throw await readError(response, "Не удалось зарегистрироваться");
   }
-  return (await response.json()) as RegisterResult;
-}
-
-/** Подтвердить email по токену из письма (GET /api/auth/verify-email). */
-export async function verifyEmail(token: string): Promise<{ email: string }> {
-  const response = await authFetch(
-    `/api/auth/verify-email?token=${encodeURIComponent(token)}`,
-  );
-  if (!response.ok) {
-    throw await readError(response, "Не удалось подтвердить email");
-  }
-  return (await response.json()) as { email: string };
-}
-
-/** Повторно отправить письмо подтверждения (backend держит cooldown 60 сек). */
-export async function resendVerification(
-  email: string,
-): Promise<{ message: string; verification_url?: string | null }> {
-  const response = await authFetch("/api/auth/resend-verification", {
-    method: "POST",
-    body: JSON.stringify({ email }),
-  });
-  if (!response.ok) {
-    throw await readError(response, "Не удалось отправить письмо");
-  }
-  return (await response.json()) as { message: string };
+  return (await response.json()) as AuthUser;
 }
 
 /** Войти: сохраняет токен и возвращает данные пользователя. */
