@@ -61,8 +61,10 @@ function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const register = useCallback(async (username: string, email: string, password: string) => {
-    // Регистрируем и сразу входим — подтверждение email не требуется
-    const user = await apiRegister({ username, email, password });
+    // Регистрируем и сразу входим: apiLogin сохранит JWT в localStorage
+    // и вернёт данные пользователя — после этого сайт полностью доступен
+    await apiRegister({ username, email, password });
+    const user = await apiLogin(email, password);
     setCurrentUser(user);
   }, []);
 
