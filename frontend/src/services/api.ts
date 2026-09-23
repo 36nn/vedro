@@ -245,3 +245,11 @@ export async function deleteHistory(recordId: number): Promise<void> {
     throw await readError(response, "Не удалось удалить запись");
   }
 }
+
+/** Удалить свой аккаунт (история и токены удаляются вместе с ним). */
+export async function deleteAccount(): Promise<void> {
+  const response = await authFetch("/api/auth/account", { method: "DELETE" });
+  if (!response.ok) {
+    throw await readError(response, "Не удалось удалить аккаунт");
+  }
+}

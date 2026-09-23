@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getHistoryCount } from "../services/api";
 
@@ -17,9 +18,27 @@ function formatDate(iso: string): string {
 }
 
 function Profile() {
-  const { currentUser } = useAuth();
+  const { currentUser, deleteAccount } = useAuth();
+  const navigate = useNavigate();
   const [watchedCount, setWatchedCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function handleDeleteAccount() {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      // Аккаунт удалён на backend (история ушла каскадом), сессия очищена
+      await deleteAccount();
+      navigate("/", { replace: true });
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Не удалось удалить аккаунт");
+      setIsDeleting(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -75,6 +94,46 @@ function Profile() {
         </dl>
 
         {error && <p className="home__error">{error}</p>}
+      </section>
+
+      {/* Опасная зона: безвозвратное удаление аккаунта */}
+      <section className="danger-zone">
+        <h2 className="danger-zone__title">Опасная зона</h2>
+        <p className="danger-zone__text">
+          Удаление необратимо: исчезнут аккаунт и вся история просмотров.
+        </p>
+
+        {!confirmDelete ? (
+          <button
+            type="button"
+            className="btn btn--danger"
+            onClick={() => setConfirmDelete(true)}
+          >
+            Удалить аккаунт
+          </button>
+        ) : (
+          <div className="danger-zone__confirm">
+            <span>Точно удалить аккаунт?</span>
+            <button
+              type="button"
+              className="btn btn--danger"
+              onClick={() => void handleDeleteAccount()}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Удаляем…" : "Да, удалить"}
+            </button>
+            <button
+              type="button"
+              className="btn btn--ghost"
+              onClick={() => setConfirmDelete(false)}
+              disabled={isDeleting}
+            >
+              Отмена
+            </button>
+          </div>
+        )}
+
+        {deleteError && <p className="home__error">{deleteError}</p>}
       </section>
     </main>
   );

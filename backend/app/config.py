@@ -44,6 +44,26 @@ class Settings(BaseSettings):
             return [s.strip() for s in value.split(",") if s.strip()]
         return value
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def _normalize_database_url(cls, value):
+        """Привести строку Supabase/Render к схеме psycopg 3.
+
+        Supabase отдаёт `postgresql://...` (а иногда `postgres://...`):
+        по такой схеме SQLAlchemy ищет драйвер psycopg2, которого в проекте
+        НЕТ — приложение падает на старте с NoSuchModuleError. Нормализуем
+        до `postgresql+psycopg://`. Заодно убираем случайные пробелы/переносы
+        строк, которые Render иногда добавляет к значению env.
+        """
+        if not isinstance(value, str):
+            return value
+        url = value.strip()
+        if url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+        elif url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+psycopg://", 1)
+        return url
+
     # Ключ YouTube Data API v3. Хранится только на backend (в .env)
     # и никогда не попадает во frontend.
     youtube_api_key: str = ""
@@ -53,7 +73,9 @@ class Settings(BaseSettings):
     youtube_api_keys: str = ""
 
     # --- База данных (PostgreSQL) ---
-    # Строка подключения; пароль БД — только в backend/.env
+    # Строка подключения; пароль БД — только в backend/.env / env Render.
+    # Схемы postgresql:// и postgres:// (как отдаёт Supabase) автоматически
+    # нормализуются до postgresql+psycopg:// — см. валидатор ниже.
     database_url: str = "postgresql+psycopg://postgres:postgres@127.0.0.1:5432/vedro"
 
     # --- JWT ---

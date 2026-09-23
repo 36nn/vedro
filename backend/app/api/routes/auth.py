@@ -261,6 +261,18 @@ def resend_verification(payload: ResendRequest, db: DBSession) -> ResendResponse
     )
 
 
+@router.delete("/account", status_code=status.HTTP_204_NO_CONTENT)
+def delete_account(current_user: CurrentUser, db: DBSession) -> None:
+    """Удалить свой аккаунт.
+
+    Требуется JWT: удаляется только пользователь из токена, чужой аккаунт
+    удалить невозможно. Вместе с пользователем каскадно удаляются история
+    просмотров и токены подтверждения email (FK ON DELETE CASCADE).
+    """
+    db.delete(current_user)
+    db.commit()
+
+
 @router.get("/me", response_model=UserOut)
 def me(current_user: CurrentUser) -> User:
     """Данные текущего пользователя (требует Bearer-токен)."""

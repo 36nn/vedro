@@ -17,7 +17,11 @@ from app.database import Base  # noqa: E402
 config = context.config
 
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    # disable_existing_loggers=False: иначе fileConfig отключает все
+    # существующие логгеры (в т.ч. uvicorn.error), и при падении старта
+    # traceback не попадает в логи Render — видно только
+    # «Exited with status 3» без причины.
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 # Реальная строка подключения — из настроек приложения (backend/.env)
 config.set_main_option("sqlalchemy.url", settings.database_url)

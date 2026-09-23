@@ -15,6 +15,7 @@ import {
 import {
   AuthUser,
   clearToken,
+  deleteAccount as apiDeleteAccount,
   getCurrentUser,
   getToken,
   login as apiLogin,
@@ -29,6 +30,8 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<RegisterResult>;
+  /** Полностью удаляет аккаунт и разлогинивает */
+  deleteAccount: () => Promise<void>;
   logout: () => void;
 }
 
@@ -65,6 +68,13 @@ function AuthProvider({ children }: { children: ReactNode }) {
     return await apiRegister({ username, email, password });
   }, []);
 
+  const deleteAccount = useCallback(async () => {
+    // Удаляем аккаунт на backend (история уйдёт каскадом), затем чистим сессию
+    await apiDeleteAccount();
+    clearToken();
+    setCurrentUser(null);
+  }, []);
+
   const logout = useCallback(() => {
     // Stateless JWT: «выход» — просто удаляем токен на клиенте
     clearToken();
@@ -78,9 +88,10 @@ function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       login,
       register,
+      deleteAccount,
       logout,
     }),
-    [currentUser, loading, login, register, logout],
+    [currentUser, loading, login, register, deleteAccount, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
